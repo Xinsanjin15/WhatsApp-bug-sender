@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apocalypse Bug - REAL</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background: #0a0a0a; 
+            color: #00ff88; 
+            font-family: 'Courier New', monospace;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid #00ff88;
+            border-radius: 10px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 0 20px rgba(0,255,136,0.3);
+            text-align: center;
+        }
+        h1 { 
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px #00ff88;
+        }
+        .status {
+            background: rgba(0,255,136,0.1);
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .online { color: #00ff88; }
+        .offline { color: #ff4444; }
+        input, select, button {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid #00ff88;
+            border-radius: 5px;
+            color: white;
+            font-size: 16px;
+        }
+        button {
+            background: #00ff88;
+            color: black;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+        button:hover { background: #00cc66; }
+        button:disabled { background: #666; cursor: not-allowed; }
+        .result {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+        .success { background: rgba(0,255,136,0.2); color: #00ff88; }
+        .error { background: rgba(255,68,68,0.2); color: #ff4444; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🐛 APOCALYPSE BUG SENDER</h1>
+        
+        <div class="status" id="status">
+            <span id="statusText">Checking connection...</span>
+        </div>
+
+        <input type="text" id="target" placeholder="628xxxx (tanpa +)" maxlength="15">
+        
+        <select id="bugType">
+            <option value="v1">Special Characters Flood</option>
+            <option value="v2">RTL Crash Messages</option>
+            <option value="v3">Mixed Content Bug</option>
+            <option value="v4">Long Repeated Text</option>
+        </select>
+
+        <button onclick="sendBug()" id="sendBtn">🚀 SEND BUG</button>
+
+        <div class="result" id="result"></div>
+        
+        <div style="margin-top: 20px; font-size: 12px; color: #666;">
+            <p>⚠️ Gunakan dengan bijak</p>
+        </div>
+    </div>
+
+    <script>
+        // Check status
+        async function checkStatus() {
+            try {
+                const response = await fetch('/status');
+                const data = await response.json();
+                
+                const statusEl = document.getElementById('status');
+                const statusText = document.getElementById('statusText');
+                
+                if (data.bot === 'connected') {
+                    statusEl.className = 'status online';
+                    statusText.innerHTML = '✅ BOT CONNECTED - READY TO SEND';
+                } else {
+                    statusEl.className = 'status offline';
+                    statusText.innerHTML = '❌ BOT OFFLINE - Scan QR di server';
+                }
+            } catch (error) {
+                document.getElementById('status').className = 'status offline';
+                document.getElementById('statusText').innerHTML = '❌ SERVER ERROR';
+            }
+        }
+
+        // Send bug function
+        async function sendBug() {
+            const target = document.getElementById('target').value.trim();
+            const bugType = document.getElementById('bugType').value;
+            const btn = document.getElementById('sendBtn');
+            const resultEl = document.getElementById('result');
+
+            if (!/^628\d{8,12}$/.test(target)) {
+                showResult('❌ Format nomor salah! Gunakan: 628xxxx', 'error');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '⏳ SENDING BUG...';
+            resultEl.style.display = 'none';
+
+            try {
+                const response = await fetch('/send-bug', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ target, bugType })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showResult(`✅ BUG TERKIRIM!<br>Target: ${target}`, 'success');
+                } else {
+                    showResult(`❌ GAGAL: ${data.message}`, 'error');
+                }
+
+            } catch (error) {
+                showResult('❌ ERROR: Gagal terhubung ke server', 'error');
+            }
+
+            btn.disabled = false;
+            btn.innerHTML = '🚀 SEND BUG';
+        }
+
+        function showResult(message, type) {
+            const resultEl = document.getElementById('result');
+            resultEl.innerHTML = message;
+            resultEl.className = `result ${type}`;
+            resultEl.style.display = 'block';
+        }
+
+        // Auto check status
+        checkStatus();
+        setInterval(checkStatus, 10000);
+
+        // Auto format input
+        document.getElementById('target').addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+    </script>
+</body>
+          </html>
