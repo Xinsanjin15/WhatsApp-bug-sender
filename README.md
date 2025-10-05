@@ -1,2 +1,2 @@
 # WhatsApp-bug-sender
-Tes
+Tes aja
